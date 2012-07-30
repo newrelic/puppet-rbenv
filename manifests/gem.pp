@@ -1,6 +1,28 @@
+# Type rbenv::gem
+#
 # Install a gem under rbenv for a certain user's ruby version.
-# Title doesn't matter, just don't duplicate it
-# Requires rbenv::compile for the passed in user and ruby version
+#
+# Parameters:
+# - *title*: ignored, just make sure it's unique
+# - *foruser*: the user who is going to install the gem.
+# - *gemversion*: the version of the gem you want. Passed literally to gem
+#                 --version='', so you can use picky specifiers (=, ~>, etc.)
+# - *rubyversion*: the version of ruby you'd like the gem installed to
+# - *version*: the global ruby version which is going to be compiled and
+#              installed. It is optional.
+#
+# Requires:
+# - a compiled-in rbenv environment for the user.
+#
+# Sample Usage:
+#
+#   rbenv::gem {
+#     "bundler_for_www-data":
+#       gemname => 'bundler',
+#       gemversion => '~>1.1',
+#       foruser => 'www-data,
+#       rubyversion => '1.9.3-p194';
+#   }
 define rbenv::gem($gemname, $foruser, $rubyversion, $gemversion) {
   $gemcmd = "/home/$foruser/.rbenv/versions/$rubyversion/bin/gem"
 
