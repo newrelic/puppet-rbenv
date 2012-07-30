@@ -26,22 +26,11 @@
 #
 # [Remember: No empty lines between comments and class definition]
 class rbenv ( $user, $group=$user, $home_dir="/home/${user}", $compile=true, $version='1.9.3-p194' ) {
-
-  include rbenv::dependencies
-
-  rbenv::install { "rbenv::install::${user}":
-    user      => $user,
-    group     => $group,
-    home_dir  => $home_dir,
+  rbenv::user { 
+    "rbenv_class_${version}_for_${user}":
+      group => $group,
+      home_dir => $home_dir,
+      compile => $compile,
+      version => $version;
   }
-
-  if $compile {
-    rbenv::compile { "rbenv::compile::${user}::${version}":
-      user         => $user,
-      group        => $group,
-      home_dir     => $home_dir,
-      ruby_version => $version,
-    }
-  }
-
 }
