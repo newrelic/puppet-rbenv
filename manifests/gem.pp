@@ -9,7 +9,7 @@ define rbenv::gem($gemname, $foruser, $rubyversion, $gemversion) {
  
   exec {
     "install rbenv gem $gemname $gemversion in ruby $rubyversion for $foruser":
-      command => "$gemcmd install $gemname --quiet --no-ri --no-rdoc --version $gemversion",
+      command => "$gemcmd install $gemname --quiet --no-ri --no-rdoc --version='$gemversion'",
       path    => $exec_path,
       user    => $foruser,
       onlyif  => $ruby_version_assert,
