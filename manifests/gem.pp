@@ -24,18 +24,17 @@
 #       rubyversion => '1.9.3-p194';
 #   }
 define rbenv::gem($gemname, $foruser, $rubyversion, $gemversion) {
-  $gemcmd = "/home/$foruser/.rbenv/versions/$rubyversion/bin/gem"
-
-  $ruby_version_assert = "[ -f $gemcmd ]"
+  $ruby_version_assert = "[ -f /home/$foruser/.rbenv/versions/$rubyversion/bin/gem ]"
   $exec_path = [ "/home/$foruser/.rbenv/shims", "/home/$foruser/.rbenv/bin", '/usr/bin', '/bin']
  
   exec {
     "install rbenv gem $gemname $gemversion in ruby $rubyversion for $foruser":
-      command => "$gemcmd install $gemname --quiet --no-ri --no-rdoc --version='$gemversion'",
+      environment => "RBENV_VERSION=$rubyversion",
+      command => "gem install $gemname --no-ri --no-rdoc --version='$gemversion'",
       path    => $exec_path,
       user    => $foruser,
       onlyif  => $ruby_version_assert,
-      unless  => ["$gemcmd list -i -v'$gemversion' $gemname"],
+      unless  => "gem list -i -v'$gemversion' $gemname",
       require => Rbenv::Compile["rbenv::compile::$foruser::$rubyversion"];
   }
 }
