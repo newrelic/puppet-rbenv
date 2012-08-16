@@ -32,7 +32,7 @@ define rbenv::compile( $user, $group, $home_dir, $ruby_version ) {
     require     => [Class['rbenv::dependencies'], Exec["rbenv::install::${user}::checkout_ruby_build"]],
   }
 
-  exec { "rehash-rbenv $user":
+  exec { "rehash-rbenv ${user} ${ruby_version}":
     command     => 'rbenv rehash',
     user        => $user,
     group       => $group,
@@ -43,7 +43,7 @@ define rbenv::compile( $user, $group, $home_dir, $ruby_version ) {
     require     => Exec["install ruby ${user} ${ruby_version}"],
   }
 
-  exec { "set-ruby_version $user":
+  exec { "set-ruby_version $user ${ruby_version}":
     command     => "rbenv global ${ruby_version}",
     user        => $user,
     group       => $group,
@@ -52,6 +52,6 @@ define rbenv::compile( $user, $group, $home_dir, $ruby_version ) {
     onlyif      => '[ -n "$(which rbenv)" ]',
     unless      => "grep ${ruby_version} ${root_dir}/${install_dir}/version 2>/dev/null",
     path        => ["${root_dir}/${install_dir}/shims", "${root_dir}/${install_dir}/bin", '/bin', '/usr/local/bin', '/usr/bin', '/usr/sbin'],
-    require     => [Exec["install ruby ${user} ${ruby_version}"], Exec["rehash-rbenv $user"]],
+    require     => [Exec["install ruby ${user} ${ruby_version}"], Exec["rehash-rbenv $user ${ruby_version}"]],
   }
 }

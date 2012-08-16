@@ -26,7 +26,7 @@ define rbenv::user( $foruser=$title, $group=$title, $home_dir="/home/${title}", 
 
   include rbenv::dependencies
 
-  rbenv::install { "rbenv::install::${foruser}":
+  rbenv::install { "rbenv::install::${foruser}::${version}":
     user      => $foruser,
     group     => $group,
     home_dir  => $home_dir,
