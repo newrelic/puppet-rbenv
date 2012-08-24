@@ -1,6 +1,8 @@
 class rbenv::dependencies {
-  case $operatingsystem {
-    Ubuntu,Debian: { require rbenv::dependencies::ubuntu }
-    RedHat,CentOS: { require rbenv::dependencies::centos }
+  case $::osfamily {
+    debian  : { require rbenv::dependencies::ubuntu }
+    redhat  : { require rbenv::dependencies::centos }
+    suse    : { require rbenv::dependencies::suse   }
+    default : { notice("Could not load dependencies for ${::osfamily}") }
   }
 }
