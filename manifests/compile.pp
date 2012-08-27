@@ -8,8 +8,7 @@ define rbenv::compile(
   $home   = '',
   $root   = '',
   $source = '',
-  $global = false,
-) {
+  $global = false) {
 
   # Workaround http://projects.puppetlabs.com/issues/9848
   $home_path = $home ? { '' => "/home/${user}", default => $home }

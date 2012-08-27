@@ -4,8 +4,7 @@ define rbenv::definition(
   $ruby  = $title,
   $group = $user,
   $home  = '',
-  $root  = ''
-) {
+  $root  = '') {
 
   $home_path = $home ? { '' => "/home/${user}",       default => $home }
   $root_path = $root ? { '' => "${home_path}/.rbenv", default => $root }
