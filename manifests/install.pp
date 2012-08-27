@@ -1,83 +1,44 @@
-define rbenv::install ( $user, $group, $home_dir ) {
+define rbenv::install(
+  $user  = $title,
+  $group = $user,
+  $home  = '',
+  $root  = '',
+) {
 
-  # Assign different values for shared install
-  case $user {
-    'root':  {
-      $home_dir =  '/root'
-      $root_dir = '/usr/local'
-      $install_dir = 'rbenv'
-    }
-    default: {
-      $root_dir = $home_dir
-      $install_dir = '.rbenv'
-    }
+  # Workaround http://projects.puppetlabs.com/issues/9848
+  $home_path = $home ? { '' => "/home/${user}", default => $home }
+  $root_path = $root ? { '' => "${home_path}/.rbenv", default => $root }
+
+  $rbenvrc = "${home_path}/.rbenvrc"
+  $bashrc  = "${home_path}/.bashrc"
+
+  if ! defined( Class['rbenv-dependencies'] ) {
+    require rbenv::dependencies
   }
 
-  # STEP 1
-  exec { "rbenv::install::${user}::checkout":
-    command => "git clone git://github.com/sstephenson/rbenv.git ${install_dir}",
+  exec { "rbenv::checkout ${user}":
+    command => "git clone git://github.com/sstephenson/rbenv.git ${root_path}",
     user    => $user,
     group   => $group,
-    cwd     => $root_dir,
-    creates => "${root_dir}/${install_dir}",
+    creates => $root_path,
     path    => ['/usr/bin', '/usr/sbin'],
     timeout => 100,
-    require => Package['git-core'],
+    require => Package['git'],
   }
 
-  # STEP 2
-  exec { "rbenv::install::${user}::add_path_to_bashrc":
-    command => "echo \"export PATH=${root_dir}/${install_dir}/bin:\\\$PATH\" >> .bashrc",
-    user    => $user,
-    group   => $group,
-    cwd     => $home_dir,
-    onlyif  => "[ -f ${home_dir}/.bashrc ]",
-    unless  => "grep ${install_dir}/bin ${home_dir}/.bashrc 2>/dev/null",
-    path    => ['/bin', '/usr/bin', '/usr/sbin'],
-  }
-
-  # STEP 3
-  exec { "rbenv::install::${user}::add_init_to_bashrc":
-    command => 'echo "eval \"\$(rbenv init -)\"" >> .bashrc',
-    user    => $user,
-    group   => $group,
-    cwd     => $home_dir,
-    onlyif  => "[ -f ${home_dir}/.bashrc ]",
-    unless  => "grep 'rbenv init -' ${home_dir}/.bashrc 2>/dev/null",
-    path    => ['/bin', '/usr/bin', '/usr/sbin'],
-    require => Exec["rbenv::install::${user}::add_path_to_bashrc"],
-  }
-
-  file { "rbenv::install::${user}::make_plugins_dir":
-    ensure  => directory,
-    path    => "${root_dir}/${install_dir}/plugins",
+  file { "rbenv::rbenvrc ${user}":
+    path    => $rbenvrc,
     owner   => $user,
     group   => $group,
-    require => Exec["rbenv::install::${user}::checkout"],
+    content => template('rbenv/dot.rbenvrc.erb'),
   }
 
-  # STEP 4
-  # Install ruby-build under rbenv plugins directory
-  exec { "rbenv::install::${user}::checkout_ruby_build":
-    command => 'git clone git://github.com/sstephenson/ruby-build.git',
+  exec { "rbenv::bashrc ${user}":
+    command => "echo 'source ${rbenvrc}' >> ${bashrc}",
     user    => $user,
     group   => $group,
-    cwd     => "${root_dir}/${install_dir}/plugins",
-    creates => "${root_dir}/${install_dir}/plugins/ruby-build",
-    path    => ['/usr/bin', '/usr/sbin'],
-    timeout => 100,
-    require => File["rbenv::install::${user}::make_plugins_dir"],
+    unless  => "grep -q rbenvrc ${bashrc}",
+    path    => ['/bin', '/usr/bin', '/usr/sbin'],
+    require => File["rbenv::rbenvrc ${user}"],
   }
-
-  # TODO: Support old way of non-plugin installation for ruby-build
-  # STEP 5
-  #  exec { 'install ruby-build':
-  #    command => 'sh install.sh',
-  #  user    => 'root',
-  #  group   => 'root',
-  #  cwd     => "${root_dir}/ruby-build",
-  #  onlyif  => '[ -z "$(which ruby-build)" ]',
-  #  path    => ['/bin', '/usr/local/bin', '/usr/bin', '/usr/sbin'],
-  #  require => Exec["rbenv::install::${user}::checkout_ruby_build"],
-  #}
 }
