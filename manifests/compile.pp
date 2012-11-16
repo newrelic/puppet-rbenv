@@ -17,6 +17,7 @@ define rbenv::compile( $user, $group, $home_dir, $ruby_version ) {
     }
   }
 
+  $configure_opts = "--disable-install-doc"
 
   # Set Timeout to disabled cause we need a lot of time to compile.
   # Use HOME variable and define PATH correctly.
@@ -26,7 +27,7 @@ define rbenv::compile( $user, $group, $home_dir, $ruby_version ) {
     user        => $user,
     group       => $group,
     cwd         => $home_dir,
-    environment => [ "HOME=${home_dir}" ],
+    environment => [ "HOME=${home_dir}", "CONFIGURE_OPTS=${configure_opts}" ],
     onlyif      => ['[ -n "$(which rbenv)" ]', "[ ! -e ${root_dir}/${install_dir}/versions/${ruby_version} ]"],
     path        => ["${root_dir}/${install_dir}/shims", "${root_dir}/${install_dir}/bin", '/bin', '/usr/local/bin', '/usr/bin', '/usr/sbin'],
     require     => [Class['rbenv::dependencies'], Exec["rbenv::install::${user}::checkout_ruby_build"]],
