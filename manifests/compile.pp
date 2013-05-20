@@ -31,6 +31,7 @@ define rbenv::compile( $user, $group, $home_dir, $ruby_version ) {
     onlyif      => ['[ -n "$(which rbenv)" ]', "[ ! -e ${root_dir}/${install_dir}/versions/${ruby_version} ]"],
     path        => ["${root_dir}/${install_dir}/shims", "${root_dir}/${install_dir}/bin", '/bin', '/usr/local/bin', '/usr/bin', '/usr/sbin'],
     require     => [Class['rbenv::dependencies'], Exec["rbenv::install::${user}::checkout_ruby_build"]],
+    logoutput   => "on_failure",
   }
 
   exec { "rehash-rbenv ${user} ${ruby_version}":
@@ -42,6 +43,7 @@ define rbenv::compile( $user, $group, $home_dir, $ruby_version ) {
     onlyif      => '[ -n "$(which rbenv)" ]',
     path        => ["${root_dir}/${install_dir}/shims", "${root_dir}/${install_dir}/bin", '/bin', '/usr/local/bin', '/usr/bin', '/usr/sbin'],
     require     => Exec["install ruby ${user} ${ruby_version}"],
+    logoutput   => "on_failure",
   }
 
   exec { "set-ruby_version $user ${ruby_version}":
@@ -54,5 +56,6 @@ define rbenv::compile( $user, $group, $home_dir, $ruby_version ) {
     unless      => "grep ${ruby_version} ${root_dir}/${install_dir}/version 2>/dev/null",
     path        => ["${root_dir}/${install_dir}/shims", "${root_dir}/${install_dir}/bin", '/bin', '/usr/local/bin', '/usr/bin', '/usr/sbin'],
     require     => [Exec["install ruby ${user} ${ruby_version}"], Exec["rehash-rbenv $user ${ruby_version}"]],
+    logoutput   => "on_failure",
   }
 }
