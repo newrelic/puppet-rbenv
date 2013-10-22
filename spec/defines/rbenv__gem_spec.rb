@@ -8,7 +8,7 @@ describe 'rbenv::gem', :type => :define do
     should contain_exec(
       "install rbenv gem #{params[:gemname]} #{params[:gemversion]} in ruby #{params[:rubyversion]} for #{params[:foruser]}"
       ).with(
-        'command' => "gem install #{params[:gemname]} --quiet --no-ri --no-rdoc --version='#{params[:gemversion]}'",
+        'command' => "gem install #{params[:gemname]} --no-ri --no-rdoc --version='#{params[:gemversion]}'",
         'path'    => [ "/home/#{params[:foruser]}/.rbenv/shims", "/home/#{params[:foruser]}/.rbenv/bin", '/usr/bin', '/bin'],
         'user'    => params[:foruser],
         'onlyif'  => "[ -f /home/#{params[:foruser]}/.rbenv/versions/#{params[:rubyversion]}/bin/gem ]",
