@@ -1,5 +1,3 @@
-# Type rbenv::gem
-#
 # Install a gem under rbenv for a certain user's ruby version.
 # Requires rbenv::compile for the passed in user and ruby version
 #
