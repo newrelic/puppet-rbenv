@@ -9,7 +9,7 @@ define rbenv::gem(
   $gem    = $title,
   $home   = '',
   $root   = '',
-  $ensure = present,
+  $ensure = present
 ) {
 
   # Workaround http://projects.puppetlabs.com/issues/9848
@@ -20,10 +20,11 @@ define rbenv::gem(
     fail("Rbenv-Ruby ${ruby} for user ${user} not found in catalog")
   }
 
-  rbenvgem {"${user}/${ruby}/${gem}":
+  rbenvgem {"${user}/${ruby}/${gem}/${ensure}":
     ensure  => $ensure,
     user    => $user,
     gemname => $gem,
+    ruby    => $ruby,
     rbenv   => "${root_path}/versions/${ruby}",
     require => Exec["rbenv::compile ${user} ${ruby}"],
   }

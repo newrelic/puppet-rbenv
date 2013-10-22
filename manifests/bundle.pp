@@ -3,7 +3,8 @@ define rbenv::bundle(
   $user,
   $group   = $user,
   $content = '',
-  $gems    = '') {
+  $gems    = ''
+) {
 
   if ( $gems ) {
     $gemfile = template('rbenv/Gemfile.erb')

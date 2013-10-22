@@ -30,7 +30,7 @@ Puppet::Type.type(:rbenvgem).provide :default do
     end
 
     def gem(*args)
-      exe = resource[:rbenv] + '/bin/gem'
+      exe =  "RBENV_VERSION=#{resource[:ruby]} " + resource[:rbenv] + '/bin/gem'
       su('-', resource[:user], '-c', [exe, *args].join(' '))
     end
 
@@ -40,6 +40,9 @@ Puppet::Type.type(:rbenvgem).provide :default do
       gem(*args).lines.map do |line|
         line =~ /^(?:\S+)\s+\((.+)\)/
 
+        return nil unless $1
+
+        # Fetch the version number
         ver = $1.split(/,\s*/)
         ver.empty? ? nil : ver
       end.first

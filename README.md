@@ -1,6 +1,7 @@
 # Puppet-Rbenv
 
 [![Build Status](https://secure.travis-ci.org/alup/puppet-rbenv.png?branch=master)](http://travis-ci.org/alup/puppet-rbenv)
+[![endorse](http://api.coderwall.com/alup/endorsecount.png)](http://coderwall.com/alup)
 
 ## About
 
@@ -20,7 +21,7 @@ You can use the module in your manifest with the following code:
 
 ```
 rbenv::install { "someuser":
-  group => 'project'
+  group => 'project',
   home  => '/project'
 }
 ```
@@ -38,7 +39,7 @@ that must be an absolute path.
 To compile a ruby interpreter, you use `rbenv::compile` as follows:
 
 ```
-rbenv::compile { "1.9.3-p370":
+rbenv::compile { "1.9.3-p327":
   user => "someuser",
   home => "/project",
 }
@@ -80,6 +81,17 @@ rbenv::compile { "patched-ree":
 }
 ```
 
+If you're using debugger gems, you'll probably need to keep source tree after building.
+This is achieved by passing `keep => true` parameter.
+
+```
+rbenv::compile { "bar/1.8.7":
+  user => bar",
+  ruby => "1.8.7-p370",
+  keep => true,
+}
+```
+
 ## Gem installation
 
 You can install and keep gems updated for a specific ruby interpreter:
@@ -87,7 +99,7 @@ You can install and keep gems updated for a specific ruby interpreter:
 ```
 rbenv::gem { "unicorn":
   user => "foobarbaz",
-  ruby => "1.9.3-p370",
+  ruby => "1.9.3-p327",
 }
 ```
 
@@ -126,6 +138,52 @@ rbenv::plugin::rubybuild { "someuser":
 }
 ```
 
+## Install module from puppet forge
+
+You can install the latest release of this module by using the following
+command:
+
+```
+puppet module install alup-rbenv
+```
+
+## Usage with Vagrant
+
+A simple way to test this module is by using the
+[Vagrant](http://http://vagrantup.com/) library.
+
+An example of a Vagrantfile:
+
+```
+Vagrant::Config.run do |config|
+   config.vm.box = "lucid32"
+   config.vm.provision :puppet, :facter => { "osfamily" => "debian" }, :module_path => "modules" do |puppet|
+     puppet.manifests_path = "manifests"
+     puppet.manifest_file  = "base.pp"
+     puppet.options        = %w[ --libdir=\\$modulepath/rbenv/lib ]
+   end
+end
+```
+
+The `--libdir=\\$modulepath/rbenv/lib` argument is important to make
+puppet aware of the rbenvgem custom provider and type.
+
+
+## Notes
+
+This project contains a custom `rbenvgem` type for use by the client via module.
+
+Custom types and facts (plugins) are gathered together and distributed via a file mount on
+your Puppet master.
+
+To enable module distribution you need to make changes on both the Puppet master and the clients.
+Specifically, `pluginsync` must be enabled in puppet.conf configuration file on both the master and the clients.
+
+```
+[main]
+pluginsync = true
+```
+
 ## Supported Platforms
 
 * CentOS
@@ -138,4 +196,4 @@ rbenv::plugin::rubybuild { "someuser":
 
 MIT License.
 
-Copyright 2012 Andreas Loupasakis, Marcello Barnaba <vjt@openssl.it>
+Copyright 2012 Andreas Loupasakis, Marcello Barnaba <vjt@openssl.it>, Fabio Rehm

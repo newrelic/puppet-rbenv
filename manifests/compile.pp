@@ -3,12 +3,16 @@
 #
 define rbenv::compile(
   $user,
-  $ruby   = $title,
-  $group  = $user,
-  $home   = '',
-  $root   = '',
-  $source = '',
-  $global = false) {
+  $ruby           = $title,
+  $group          = $user,
+  $home           = '',
+  $root           = '',
+  $source         = '',
+  $global         = false,
+  $keep           = false,
+  $configure_opts = '--disable-install-doc',
+  $bundler        = present,
+) {
 
   # Workaround http://projects.puppetlabs.com/issues/9848
   $home_path = $home ? { '' => "/home/${user}", default => $home }
@@ -20,7 +24,16 @@ define rbenv::compile(
   $global_path = "${root_path}/version"
   $path        = [ $shims, $bin, '/bin', '/usr/bin' ]
 
-  if ! defined( Class['rbenv-dependencies'] ) {
+  # Keep flag saves source tree after building.
+  # This is required for some gems (e.g. debugger)
+  if $keep {
+    $keep_flag = '--keep '
+  }
+  else {
+    $keep_flag = ''
+  }
+
+  if ! defined( Class['rbenv::dependencies'] ) {
     require rbenv::dependencies
   }
 
@@ -54,37 +67,35 @@ define rbenv::compile(
   # Set Timeout to disabled cause we need a lot of time to compile.
   # Use HOME variable and define PATH correctly.
   exec { "rbenv::compile ${user} ${ruby}":
-    command     => "rbenv install ${ruby}; touch ${root_path}/.rehash",
+    command     => "rbenv install ${keep_flag}${ruby} && touch ${root_path}/.rehash",
     timeout     => 0,
     user        => $user,
     group       => $group,
     cwd         => $home_path,
-    environment => [ "HOME=${home_path}" ],
+    environment => [ "HOME=${home_path}", "CONFIGURE_OPTS=${configure_opts}" ],
     creates     => "${versions}/${ruby}",
     path        => $path,
     require     => Rbenv::Plugin["rbenv::plugin::rubybuild::${user}"],
-    before      => Exec["rbenv::rehash ${user}"],
+    before      => Exec["rbenv::rehash ${user} ${ruby}"],
   }
 
-  if ! defined( Exec["rbenv::rehash ${user}"] ) {
-    exec { "rbenv::rehash ${user}":
-      command     => "rbenv rehash; rm -f ${root_path}/.rehash",
-      user        => $user,
-      group       => $group,
-      cwd         => $home_path,
-      onlyif      => "[ -e '${root_path}/.rehash' ]",
-      environment => [ "HOME=${home_path}" ],
-      path        => $path,
-    }
+  exec { "rbenv::rehash ${user} ${ruby}":
+    command     => "rbenv rehash && rm -f ${root_path}/.rehash",
+    user        => $user,
+    group       => $group,
+    cwd         => $home_path,
+    onlyif      => "[ -e '${root_path}/.rehash' ]",
+    environment => [ "HOME=${home_path}" ],
+    path        => $path,
   }
 
   # Install bundler
   #
-  gem {"rbenv::bundler ${user} ${ruby}":
-    ensure => present,
-    gem    => 'bundler',
+  rbenv::gem {"rbenv::bundler ${user} ${ruby}":
+    ensure => $bundler,
     user   => $user,
     ruby   => $ruby,
+    gem    => 'bundler',
     home   => $home_path,
     root   => $root_path,
   }
@@ -97,6 +108,7 @@ define rbenv::compile(
       content => "$ruby\n",
       owner   => $user,
       group   => $group,
+      require => Exec["rbenv::compile ${user} ${ruby}"]
     }
   }
 }
