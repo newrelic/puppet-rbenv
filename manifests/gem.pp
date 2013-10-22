@@ -30,7 +30,7 @@ define rbenv::gem($gemname, $foruser, $rubyversion, $gemversion) {
   exec {
     "install rbenv gem $gemname $gemversion in ruby $rubyversion for $foruser":
       environment => ["RBENV_VERSION=$rubyversion", "USER=$foruser", "LOGNAME=$foruser", "HOME=/home/$foruser"],
-      command     => "gem install $gemname --no-ri --no-rdoc --version='$gemversion'",
+      command     => "gem install $gemname --quiet --no-ri --no-rdoc --version='$gemversion'",
       path        => $exec_path,
       user        => $foruser,
       onlyif      => $ruby_version_assert,
