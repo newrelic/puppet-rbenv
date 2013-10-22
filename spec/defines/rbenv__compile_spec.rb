@@ -10,12 +10,12 @@ describe 'rbenv::compile', :type => :define do
   end
 
   it "issues a rehash command" do
-    should contain_exec("rehash-rbenv #{params[:user]}").
+    should contain_exec("rehash-rbenv #{params[:user]} #{params[:ruby_version]}").
       with_command("rbenv rehash")
   end
 
   it "sets the global ruby version for the specific user" do
-    should contain_exec("set-ruby_version #{params[:user]}").
+    should contain_exec("set-ruby_version #{params[:user]} #{params[:ruby_version]}").
       with_command("rbenv global #{params[:ruby_version]}")
   end
 end
