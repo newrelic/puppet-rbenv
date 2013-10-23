@@ -1,0 +1,57 @@
+Puppet::Type.type(:rbenvgem).provide :default do
+  desc "Maintains gems inside an RBenv setup"
+
+  commands :sudo => 'sudo'
+
+  def install
+    args = ['install', '--no-rdoc', '--no-ri']
+    args << "-v#{resource[:ensure]}" if !resource[:ensure].kind_of?(Symbol)
+    args << gem_name
+
+    output = gem(*args)
+    fail "Could not install: #{output.chomp}" if output.include?('ERROR')
+    rehash
+  end
+
+  def uninstall
+    gem 'uninstall', '-aIx', gem_name
+    rehash
+  end
+
+  def latest
+    @latest ||= list(:remote)
+  end
+
+  def current
+    list
+  end
+
+  private
+    def rehash
+      exe = "RBENV_VERSION=#{resource[:ruby]} " + resource[:rbenv] + '/shims/rbenv rehash'
+      sudo('-u', resource[:user], exe)
+    end
+
+    def gem_name
+      resource[:gemname]
+    end
+
+    def gem(*args)
+      exe = "RBENV_VERSION=#{resource[:ruby]} " + resource[:rbenv] + '/bin/gem'
+      sudo('-u', resource[:user], [exe, *args].join(' '))
+    end
+
+    def list(where = :local)
+      args = ['list', where == :remote ? '--remote' : '--local', "#{gem_name}$"]
+
+      gem(*args).lines.map do |line|
+        line =~ /^(?:\S+)\s+\((.+)\)/
+
+        return nil unless $1
+
+        # Fetch the version number
+        ver = $1.split(/,\s*/)
+        ver.empty? ? nil : ver
+      end.first
+    end
+end
