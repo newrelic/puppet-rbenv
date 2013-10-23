@@ -29,7 +29,7 @@ describe 'rbenv::compile', :type => :define do
   end
 
   it "installs bundler" do
-    should contain_rbenv__gem("rbenv::bundler #{user} #{ruby_version}").
+    should contain_rbenvgem("rbenvgem::bundler #{user} #{ruby_version}").
       with_ensure(bundler)
   end
 end

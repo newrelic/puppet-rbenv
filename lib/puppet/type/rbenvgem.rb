@@ -53,10 +53,15 @@ Puppet::Type.newtype(:rbenvgem) do
 
   newparam(:rbenv) do
     desc 'The rbenv root'
+
+    # Support all the goodness that expand_path supports
+    # e.g. ~user for home dirs.
+    munge do |value|
+      File.expand_path(File.join(value, '.rbenv'))
+    end
   end
 
   newparam(:user) do
     desc 'The rbenv owner'
   end
-
 end

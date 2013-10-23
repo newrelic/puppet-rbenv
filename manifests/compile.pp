@@ -86,18 +86,17 @@ define rbenv::compile(
     cwd         => $home_path,
     onlyif      => "[ -e '${root_path}/.rehash' ]",
     environment => [ "HOME=${home_path}" ],
-    path        => $path,
+    path        => $path
   }
 
   # Install bundler
   #
-  rbenv::gem {"rbenv::bundler ${user} ${ruby}":
+  rbenvgem {"rbenvgem::bundler ${user} ${ruby}":
     ensure => $bundler,
     user   => $user,
     ruby   => $ruby,
-    gem    => 'bundler',
-    home   => $home_path,
-    root   => $root_path,
+    name   => 'bundler',
+    rbenv  => $root_path
   }
 
   # Set default global ruby version for rbenv, if requested
