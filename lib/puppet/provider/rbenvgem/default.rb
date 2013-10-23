@@ -10,10 +10,12 @@ Puppet::Type.type(:rbenvgem).provide :default do
 
     output = gem(*args)
     fail "Could not install: #{output.chomp}" if output.include?('ERROR')
+    rehash
   end
 
   def uninstall
     gem 'uninstall', '-aIx', gem_name
+    rehash
   end
 
   def latest
@@ -25,12 +27,17 @@ Puppet::Type.type(:rbenvgem).provide :default do
   end
 
   private
+    def rehash
+      exe = "RBENV_VERSION=#{resource[:ruby]} " + resource[:rbenv] + '/shims/rbenv rehash'
+      sudo('-u', resource[:user], exe)
+    end
+
     def gem_name
       resource[:gemname]
     end
 
     def gem(*args)
-      exe =  "RBENV_VERSION=#{resource[:ruby]} " + resource[:rbenv] + '/bin/gem'
+      exe = "RBENV_VERSION=#{resource[:ruby]} " + resource[:rbenv] + '/bin/gem'
       sudo('-u', resource[:user], [exe, *args].join(' '))
     end
 

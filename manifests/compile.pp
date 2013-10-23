@@ -67,7 +67,7 @@ define rbenv::compile(
   # Set Timeout to disabled cause we need a lot of time to compile.
   # Use HOME variable and define PATH correctly.
   exec { "rbenv::compile ${user} ${ruby}":
-    command     => "rbenv install ${keep_flag}${ruby} && touch ${root_path}/.rehash",
+    command     => "rbenv install ${keep_flag}${ruby}",
     timeout     => 0,
     user        => $user,
     group       => $group,
@@ -75,18 +75,7 @@ define rbenv::compile(
     environment => [ "HOME=${home_path}", "CONFIGURE_OPTS=${configure_opts}" ],
     creates     => "${versions}/${ruby}",
     path        => $path,
-    require     => Rbenv::Plugin["rbenv::plugin::rubybuild::${user}"],
-    before      => Exec["rbenv::rehash ${user} ${ruby}"],
-  }
-
-  exec { "rbenv::rehash ${user} ${ruby}":
-    command     => "rbenv rehash && rm -f ${root_path}/.rehash",
-    user        => $user,
-    group       => $group,
-    cwd         => $home_path,
-    onlyif      => "[ -e '${root_path}/.rehash' ]",
-    environment => [ "HOME=${home_path}" ],
-    path        => $path
+    require     => Rbenv::Plugin["rbenv::plugin::rubybuild::${user}"]
   }
 
   # Install bundler

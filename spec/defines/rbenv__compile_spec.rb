@@ -10,12 +10,7 @@ describe 'rbenv::compile', :type => :define do
 
   it "installs ruby of the chosen version" do
     should contain_exec("rbenv::compile #{user} #{ruby_version}").
-      with_command("rbenv install #{ruby_version} && touch #{dot_rbenv}/.rehash")
-  end
-
-  it "issues a rehash command" do
-    should contain_exec("rbenv::rehash #{user} #{ruby_version}").
-      with_command("rbenv rehash && rm -f #{dot_rbenv}/.rehash")
+      with_command("rbenv install #{ruby_version}")
   end
 
   it "sets the global ruby version for the specific user" do
