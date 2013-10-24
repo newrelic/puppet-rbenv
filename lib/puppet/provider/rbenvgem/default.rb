@@ -1,47 +1,57 @@
-Puppet::Type.type(:rbenvcompile).provide :default do
-  desc 'Compile a particular Ruby version for use in RBenv'
+Puppet::Type.type(:rbenvgem).provide :default do
+  desc "Maintains gems inside an RBenv setup"
+
+  commands :sudo => 'sudo'
 
   def install
-    opts = resource[:keep_source] ? '--keep' : ''
-    begin
-      ENV['RUBY_BUILD_BUILD_PATH'] = Dir.mktmpdir("ruby-build.#{$$}")
-      rbenv('install', opts, resource[:ruby])
-    rescue Puppet::Error => e
-      FileUtils.rm_rf(ENV['RUBY_BUILD_BUILD_PATH'])
-      raise Puppet::Error, e.message, e.backtrace
-    end
+    args = ['install', '--no-rdoc', '--no-ri']
+    args << "-v#{resource[:ensure]}" if !resource[:ensure].kind_of?(Symbol)
+    args << gem_name
+
+    output = gem(*args)
+    fail "Could not install: #{output.chomp}" if output.include?('ERROR')
+    rehash
   end
 
   def uninstall
-    rbenv('uninstall', resource[:ruby])
+    gem 'uninstall', '-aIx', gem_name
+    rehash
+  end
+
+  def latest
+    @latest ||= list(:remote)
   end
 
   def current
-    rbenv('versions').split(/\n/).any? { |x| x =~ /^\s*#{resource[:ruby]}/ }
+    list
   end
 
   private
-    def sudo(args)
-      args = args.join(' ')
-
-      output = Puppet::Util::Execution.execute(
-        "sudo #{args}", 
-        :failonfail => false, 
-        :combine => true
-      )
-      exitstatus = $CHILD_STATUS.exitstatus
-
-      unless exitstatus == 0
-        raise Puppet::Error.new(
-          "Failure: 'sudo #{args} exitstatus': #{exitstatus}, output: '#{output}'"
-        )
-      end
-
-      output
+    def rehash
+      exe = "RBENV_VERSION=#{resource[:ruby]} " + resource[:rbenv] + '/shims/rbenv rehash'
+      sudo('-u', resource[:user], exe)
     end
 
-    def rbenv(*args)
-      exe = File.join(resource[:rbenv], *%w{ bin rbenv })
-      sudo('-u', resource[:user], exe, *args)
+    def gem_name
+      resource[:gemname]
+    end
+
+    def gem(*args)
+      exe = "RBENV_VERSION=#{resource[:ruby]} " + resource[:rbenv] + '/bin/gem'
+      sudo('-u', resource[:user], [exe, *args].join(' '))
+    end
+
+    def list(where = :local)
+      args = ['list', where == :remote ? '--remote' : '--local', "#{gem_name}$"]
+
+      gem(*args).lines.map do |line|
+        line =~ /^(?:\S+)\s+\((.+)\)/
+
+        return nil unless $1
+
+        # Fetch the version number
+        ver = $1.split(/,\s*/)
+        ver.empty? ? nil : ver
+      end.first
     end
 end

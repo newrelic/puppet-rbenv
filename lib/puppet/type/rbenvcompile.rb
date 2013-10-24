@@ -27,6 +27,10 @@ Puppet::Type.newtype(:rbenvcompile) do
     end
   end
 
+  newparam(:name, :namevar => true) do
+    desc 'The catalog name'
+  end
+
   newparam(:ruby) do
     desc 'The ruby interpreter version'
   end
