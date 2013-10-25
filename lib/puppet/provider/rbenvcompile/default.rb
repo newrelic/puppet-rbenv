@@ -17,12 +17,7 @@ Puppet::Type.type(:rbenvcompile).provide :default do
 
   def current
     versions_dir = File.join(resource[:rbenv], 'versions', resource[:ruby])
-
-    unless File.exists?(versions_dir)
-      notice "#{resource[:ruby]} can't be installed, versions dir (#{versions_dir}) is missing."
-      return false
-    end
-
+    return false unless File.exists?(versions_dir)
     rbenv.versions.any? { |x| x =~ /#{resource[:ruby]}/ }
   end
 

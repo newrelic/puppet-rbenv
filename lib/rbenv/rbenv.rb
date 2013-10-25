@@ -18,9 +18,9 @@ class Rbenv
     info "Installing #{version} at #{@rbenv_root}"
     opts = keep_source ? '--keep' : ''
 
-    ensuring_cleanup_after_build do
+    output = ensuring_cleanup_after_build do
       ENV['RUBY_BUILD_BUILD_PATH'] = Dir.mktmpdir("ruby-build.#{$$}")
-      output = run('install', opts, version)
+      run('install', opts, version)
     end
     
     validate_install(output)
@@ -95,11 +95,11 @@ class Rbenv
   end
 
   def ensure_ruby_build
-    plugins_dir = File.join(resource[:rbenv], 'plugins')
+    plugins_dir = File.join(@rbenv_root, 'plugins')
     return if File.exists?(File.join(plugins_dir, 'ruby-build'))
 
     FileUtils.mkdir_p(plugins_dir)
-    FileUtils.chown_R(resource[:user], nil, resource[:rbenv])
+    FileUtils.chown_R(@user, nil, @rbenv_root)
 
     starting_dir = FileUtils.pwd
     FileUtils.chdir plugins_dir
