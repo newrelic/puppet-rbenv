@@ -39,12 +39,8 @@ Puppet::Type.newtype(:rbenvgem) do
     end
   end
 
-  newparam(:name) do
-    desc 'Gem qualified name within an rbenv repository'
-  end
-
-  newparam(:gemname) do
-    desc 'The Gem name'
+  newparam(:gem, :namevar => true) do
+    desc 'The gem to install'
   end
 
   newparam(:ruby) do
