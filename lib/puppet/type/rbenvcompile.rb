@@ -50,10 +50,8 @@ Puppet::Type.newtype(:rbenvcompile) do
     
     munge do |value|
       case true
-      when value == false   then false
-      when value == 'false' then false
-      when value == true    then true
-      when value == 'true'  then true
+      when value == false then false
+      when value == true  then true
       else false
       end
     end
