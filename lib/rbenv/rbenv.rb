@@ -19,7 +19,6 @@ class Rbenv
     opts = keep_source ? '--keep' : ''
 
     output = ensuring_cleanup_after_build do
-      ENV['RUBY_BUILD_BUILD_PATH'] = Dir.mktmpdir("ruby-build.#{$$}")
       run('install', opts, version)
     end
     
@@ -79,6 +78,7 @@ class Rbenv
   end
 
   def ensuring_cleanup_after_build(&block)
+    ENV['RUBY_BUILD_BUILD_PATH'] = Dir.mktmpdir("ruby-build.#{$$}")
     block.call
   ensure
     unless ENV['RUBY_BUILD_BUILD_PATH'].nil?
