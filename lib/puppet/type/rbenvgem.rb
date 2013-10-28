@@ -60,4 +60,11 @@ Puppet::Type.newtype(:rbenvgem) do
   newparam(:user) do
     desc 'The rbenv owner'
   end
+
+  autorequire(:rbenvcompile) do
+    # Autorequire rbenv compile
+    if (rbenv = self[:rbenv])
+      rbenv
+    end
+  end
 end
