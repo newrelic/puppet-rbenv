@@ -31,7 +31,7 @@ Puppet::Type.type(:rbenvgem).provide :default do
     def rbenv
       @rbenv ||= Rbenv.new(
         resource[:rbenv],
-        resource[:user],
+        resource[:user] || owner_of_rbenv(resource[:rbenv]),
         resource[:ruby],
         lambda { |line| info line }
       )
@@ -61,5 +61,13 @@ Puppet::Type.type(:rbenvgem).provide :default do
         ver = $1.split(/,\s*/)
         ver.empty? ? nil : ver
       end.first
+    end
+
+    def owner_of_rbenv(rbenv_path)
+      return 'root' unless File.exists?(rbenv_path)
+
+      require 'etc'
+      uid = File.stat(rbenv_path).uid
+      Etc.getpwuid(uid).name
     end
 end

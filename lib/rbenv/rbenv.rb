@@ -110,7 +110,7 @@ class Rbenv
 
     File.open(rc_path, 'wb') { |f| f.write(rbenvrc) }
     FileUtils.chown(@user, nil, rc_path)
-    su("echo 'source #{rc_path}' >> #{rc_file}")
+    su("echo 'source #{rc_path}' >> #{rc_path}")
   end
 
   private
