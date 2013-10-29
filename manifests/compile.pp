@@ -1,102 +1,49 @@
-# The following part compiles and installs the chosen ruby version,
-# using the "ruby-build" rbenv plugin.
-#
+# Compile and set up an rbenv-managed Ruby
+
 define rbenv::compile(
   $user,
-  $ruby           = $title,
-  $group          = $user,
-  $home           = '',
-  $root           = '',
-  $source         = '',
-  $global         = false,
-  $keep           = false,
-  $configure_opts = '--disable-install-doc',
-  $bundler        = present,
+  $rbenv_root      = "~${user}"
+  $ruby            = $title,
+  $keep_source     = false,
+  $bundler_version = 'latest'
 ) {
 
-  # Workaround http://projects.puppetlabs.com/issues/9848
-  $home_path = $home ? { '' => "/home/${user}", default => $home }
-  $root_path = $root ? { '' => "${home_path}/.rbenv", default => $root }
-
-  $bin         = "${root_path}/bin"
-  $shims       = "${root_path}/shims"
-  $versions    = "${root_path}/versions"
-  $global_path = "${root_path}/version"
-  $path        = [ $shims, $bin, '/bin', '/usr/bin' ]
-
-  # Keep flag saves source tree after building.
-  # This is required for some gems (e.g. debugger)
-  if $keep {
-    $keep_flag = '--keep '
-  }
-  else {
-    $keep_flag = ''
-  }
-
-  if ! defined( Class['rbenv::dependencies'] ) {
+  if ! defined(Class['rbenv::dependencies']) {
     require rbenv::dependencies
   }
+  
+  $compile_name = "${user}-${rbenv_root}-${ruby}"
+  $bundler_name = "bundler-${compile_name}"
+  $install_name = "rbenv::install ${user}-${rbenv}"
 
-  # If no ruby-build has been specified and the default resource hasn't been
-  # parsed
-  $custom_or_default = Rbenv::Plugin["rbenv::plugin::rubybuild::${user}"]
-  $default           = Rbenv::Plugin::Rubybuild["rbenv::rubybuild::${user}"]
-  if ! defined($custom_or_default) and ! defined($default) {
-    debug("No ruby-build found for ${user}, going to add the default one")
-    rbenv::plugin::rubybuild { "rbenv::rubybuild::${user}":
-      user   => $user,
-      group  => $group,
-      home   => $home,
-      root   => $root
-    }
+  rbenvcompile { $compile_name:
+    ensure      => present,
+    ruby        => $ruby,
+    rbenv       => $rbenv_root,
+    keep_source => $keep_source,
+    user        => $user
   }
 
-  if $source {
-    rbenv::definition { "rbenv::definition ${user} ${ruby}":
-      user    => $user,
-      group   => $group,
-      source  => $source,
-      ruby    => $ruby,
-      home    => $home,
-      root    => $root,
-      require => Rbenv::Plugin["rbenv::plugin::rubybuild::${user}"],
-      before  => Exec["rbenv::compile ${user} ${ruby}"]
-    }
-  }
-
-  # Set Timeout to disabled cause we need a lot of time to compile.
-  # Use HOME variable and define PATH correctly.
-  exec { "rbenv::compile ${user} ${ruby}":
-    command     => "rbenv install ${keep_flag}${ruby}",
-    timeout     => 0,
-    user        => $user,
-    group       => $group,
-    cwd         => $home_path,
-    environment => [ "HOME=${home_path}", "CONFIGURE_OPTS=${configure_opts}" ],
-    creates     => "${versions}/${ruby}",
-    path        => $path,
-    require     => Rbenv::Plugin["rbenv::plugin::rubybuild::${user}"]
-  }
-
-  # Install bundler
-  #
-  rbenvgem {"rbenvgem::bundler ${user} ${ruby}":
-    ensure => $bundler,
-    user   => $user,
+  rbenvgem { $bundler_name:
+    gem    => 'bundler',
+    ensure => $bundler_version,
     ruby   => $ruby,
-    name   => 'bundler',
-    rbenv  => $root_path
+    rbenv  => $rbenv_root
   }
 
-  # Set default global ruby version for rbenv, if requested
-  #
   if $global {
-    file { "rbenv::global ${user}":
+    $global_name = "rbenv::global-${user}-${rbenv_root}"
+
+    file { $global_name:
       path    => $global_path,
       content => "$ruby\n",
       owner   => $user,
       group   => $group,
-      require => Exec["rbenv::compile ${user} ${ruby}"]
     }
+
+    Rbenvcompile[$compile_name] -> File[$global_name]
   }
+
+  Rbenv::Install[$install_name] -> Rbenvcompile[$compile_name]
+  Rbenvcompile[$compile_name]   -> Rbenvgem[$bundler_name]
 }

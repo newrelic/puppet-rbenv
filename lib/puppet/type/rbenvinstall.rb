@@ -1,9 +1,9 @@
-Puppet::Type.newtype(:rbenvcompile) do
-  desc 'Compile a particular Ruby version for use in RBenv'
+Puppet::Type.newtype(:rbenvinstall) do
+  desc 'Install the RBenv base tooling to a particular path and set up for a user'
 
   ensurable do
     newvalue(:present) { provider.install   }
-    newvalue(:absent ) { provider.uninstall }
+    newvalue(:absent ) { }
 
     aliasvalue :installed, :present
 
@@ -27,15 +27,7 @@ Puppet::Type.newtype(:rbenvcompile) do
     end
   end
 
-  newparam(:name, :namevar => true) do
-    desc 'The catalog name'
-  end
-
-  newparam(:ruby) do
-    desc 'The ruby interpreter version'
-  end
-
-  newparam(:rbenv) do
+  newparam(:rbenv, :namevar => true) do
     desc 'The rbenv root'
 
     # Support all the goodness that expand_path supports
@@ -45,26 +37,17 @@ Puppet::Type.newtype(:rbenvcompile) do
     end
   end
 
-  newparam(:keep_source) do
-    desc 'Whether or not to keep the Ruby source after compilation'
-    
-    munge do |value|
-      case true
-      when value == false then false
-      when value == true  then true
-      else false
-      end
-    end
-  end
-
   newparam(:user) do
     desc 'The rbenv owner'
   end
 
-  autorequire :rbenvinstall do
-    if self[:rbenv]
-      info "Auto-requiring #{self[:rbenv]}"
-      self[:rbenv]
-    end
+  newparam(:rc_file) do
+    desc 'The file to source rbenv from'
+    defaultto :'.profile'
+  end
+
+  newparam(:home_dir) do
+    desc 'The directory where the rc_file and .rbenvrc are'
+    defaultto { "~#{self[:user]}" }
   end
 end

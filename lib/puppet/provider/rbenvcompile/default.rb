@@ -5,8 +5,6 @@ Puppet::Type.type(:rbenvcompile).provide :default do
 
   desc 'Compile a particular Ruby version for use in RBenv'
 
-  RUBY_BUILD_REPO = 'git://github.com/sstephenson/ruby-build.git'
-
   def install
     rbenv.install(resource[:ruby], resource[:keep_source])
   end

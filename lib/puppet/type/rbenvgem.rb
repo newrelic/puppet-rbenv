@@ -62,9 +62,11 @@ Puppet::Type.newtype(:rbenvgem) do
   end
 
   autorequire(:rbenvcompile) do
-    # Autorequire rbenv compile
-    if (rbenv = self[:rbenv])
-      rbenv
+    # Autorequire rbenv compile -> we require a specific name format
+    if (rbenv = File.dirname(self[:rbenv])) && (ruby = self[:ruby])
+      name = "#{rbenv}_#{ruby}"
+      info "Auto-requiring Rbenvcompile['#{name}']"
+      name
     end
   end
 end
